@@ -9,7 +9,7 @@ defmodule QueueOfMatchmaking.MatchMaking do
   end
 
   def find_match(queue) when length(queue) == 2 do
-    queue
+    {:ok, queue}
   end
 
   def find_match(_queue) do

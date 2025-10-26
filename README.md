@@ -4,18 +4,18 @@
 - [X] Initialize Mix project
 - [X] Add dependencies (Absinthe, Phoenix)
 - [X] Configure application
-- [ ] Define project structure
+- [X] Define project structure
 
 ### Phase 2: Queue Manager
-- [ ] Implement GenServer for queue
-- [ ] Add/remove operations
-- [ ] Basic state management
-- [ ] Input validation
+- [X] Implement GenServer for queue
+- [X] Add/remove operations
+- [X] Basic state management
+- [X] Input validation
 
 ### Phase 3: Matching Logic
-- [ ] Implement closest-rank algorithm
-- [ ] Handle match creation
-- [ ] Remove matched users from queue
+- [X] Implement closest-rank algorithm
+- [X] Handle match creation
+- [X] Remove matched users from queue
 - [ ] Store matched pairs
 
 ### Phase 4: GraphQL Layer
@@ -26,8 +26,8 @@
 - [ ] Configure PubSub
 
 ### Phase 5: Testing
-- [ ] Unit tests for queue operations
-- [ ] Unit tests for matching logic
+- [X] Unit tests for queue operations
+- [X] Unit tests for matching logic
 - [ ] Integration tests for GraphQL API
 - [ ] Concurrent request tests
 - [ ] Edge case coverage

@@ -14,9 +14,10 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
     end
 
     test "returns error when queue has only one request" do
-      assert {:error, :no_matches} = MatchMaking.find_match([
-        %{user_id: "player1", rank: 1500, added_to_queue: minutes_ago(5)}
-      ])
+      assert {:error, :no_matches} =
+               MatchMaking.find_match([
+                 %{user_id: "player1", rank: 1500, added_to_queue: minutes_ago(5)}
+               ])
     end
 
     test "incremental range expansion - only two in queue will auto match" do
@@ -37,9 +38,11 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
       # Queue: player1 waited 10 min, player2 waited 5 min, new player just joined
       # [oldest ... newest]
       queue = [
-        %{user_id: "player1", rank: 1100, added_to_queue: minutes_ago(10)},  # oldest (head)
+        # oldest (head)
+        %{user_id: "player1", rank: 1100, added_to_queue: minutes_ago(10)},
         %{user_id: "player2", rank: 1200, added_to_queue: minutes_ago(5)},
-        %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}  # newest (tail)
+        # newest (tail)
+        %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}
       ]
 
       assert {:ok, matched_players} = MatchMaking.find_match(queue)
@@ -56,10 +59,12 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
     test "incremental range expansion - stops at range 1 when match found" do
       # New player rank 1051, oldest eligible is at rank 1050 (range 1)
       queue = [
-        %{user_id: "player1", rank: 1000, added_to_queue: minutes_ago(20)},   # oldest
+        # oldest
+        %{user_id: "player1", rank: 1000, added_to_queue: minutes_ago(20)},
         %{user_id: "player2", rank: 1050, added_to_queue: minutes_ago(10)},
         %{user_id: "player3", rank: 1200, added_to_queue: minutes_ago(5)},
-        %{user_id: "player_new", rank: 1051, added_to_queue: minutes_ago(0)}  # newest
+        # newest
+        %{user_id: "player_new", rank: 1051, added_to_queue: minutes_ago(0)}
       ]
 
       assert {:ok, matched_players} = MatchMaking.find_match(queue)
@@ -76,10 +81,12 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
     test "FIFO within same range - matches oldest player at range 0" do
       # Multiple players at same rank, should match the one who waited longest
       queue = [
-        %{user_id: "player1", rank: 1100, added_to_queue: minutes_ago(30)},   # oldest (waited longest)
+        # oldest (waited longest)
+        %{user_id: "player1", rank: 1100, added_to_queue: minutes_ago(30)},
         %{user_id: "player2", rank: 1100, added_to_queue: minutes_ago(20)},
         %{user_id: "player3", rank: 1200, added_to_queue: minutes_ago(10)},
-        %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}  # newest
+        # newest
+        %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}
       ]
 
       assert {:ok, matched_players} = MatchMaking.find_match(queue)
@@ -93,10 +100,13 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
     test "FIFO within range 1 - matches oldest player at that distance" do
       # Multiple players at range 1, should match the one who waited longest
       queue = [
-        %{user_id: "player1", rank: 1099, added_to_queue: minutes_ago(30)},   # oldest, range 1
-        %{user_id: "player2", rank: 1101, added_to_queue: minutes_ago(20)},   # range 1
+        # oldest, range 1
+        %{user_id: "player1", rank: 1099, added_to_queue: minutes_ago(30)},
+        # range 1
+        %{user_id: "player2", rank: 1101, added_to_queue: minutes_ago(20)},
         %{user_id: "player3", rank: 1500, added_to_queue: minutes_ago(10)},
-        %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}  # newest
+        # newest
+        %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}
       ]
 
       assert {:ok, matched_players} = MatchMaking.find_match(queue)
@@ -111,9 +121,11 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
       # Range 0: no match, Range 1: no match, Range 2: match found
       queue = [
         %{user_id: "player1", rank: 1000, added_to_queue: minutes_ago(20)},
-        %{user_id: "player2", rank: 1098, added_to_queue: minutes_ago(10)},   # range 2
+        # range 2
+        %{user_id: "player2", rank: 1098, added_to_queue: minutes_ago(10)},
         %{user_id: "player3", rank: 1200, added_to_queue: minutes_ago(5)},
-        %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}  # newest
+        # newest
+        %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}
       ]
 
       assert {:ok, matched_players} = MatchMaking.find_match(queue)
@@ -143,8 +155,10 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
     test "range expansion with above and below - FIFO picks oldest at that range" do
       # Two players at range 2 (one above, one below), should pick oldest
       queue = [
-        %{user_id: "player1", rank: 1098, added_to_queue: minutes_ago(30)},   # oldest, range 2
-        %{user_id: "player2", rank: 1102, added_to_queue: minutes_ago(20)},   # range 2
+        # oldest, range 2
+        %{user_id: "player1", rank: 1098, added_to_queue: minutes_ago(30)},
+        # range 2
+        %{user_id: "player2", rank: 1102, added_to_queue: minutes_ago(20)},
         %{user_id: "player3", rank: 1500, added_to_queue: minutes_ago(10)},
         %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}
       ]
@@ -161,9 +175,12 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
       # player1 at range 5, player2 at range 3, player3 at range 1
       # Should pick player3 (smallest range), not player1 (oldest)
       queue = [
-        %{user_id: "player1", rank: 1095, added_to_queue: minutes_ago(30)},   # oldest, range 5
-        %{user_id: "player2", rank: 1103, added_to_queue: minutes_ago(20)},   # range 3
-        %{user_id: "player3", rank: 1101, added_to_queue: minutes_ago(10)},   # range 1
+        # oldest, range 5
+        %{user_id: "player1", rank: 1095, added_to_queue: minutes_ago(30)},
+        # range 3
+        %{user_id: "player2", rank: 1103, added_to_queue: minutes_ago(20)},
+        # range 1
+        %{user_id: "player3", rank: 1101, added_to_queue: minutes_ago(10)},
         %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}
       ]
 
@@ -182,9 +199,12 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
       # Two players at range 2, one at range 4
       # Should pick oldest at range 2
       queue = [
-        %{user_id: "player1", rank: 1104, added_to_queue: minutes_ago(40)},   # oldest, range 4
-        %{user_id: "player2", rank: 1102, added_to_queue: minutes_ago(30)},   # older, range 2
-        %{user_id: "player3", rank: 1098, added_to_queue: minutes_ago(20)},   # younger, range 2
+        # oldest, range 4
+        %{user_id: "player1", rank: 1104, added_to_queue: minutes_ago(40)},
+        # older, range 2
+        %{user_id: "player2", rank: 1102, added_to_queue: minutes_ago(30)},
+        # younger, range 2
+        %{user_id: "player3", rank: 1098, added_to_queue: minutes_ago(20)},
         %{user_id: "player_new", rank: 1100, added_to_queue: minutes_ago(0)}
       ]
 
@@ -267,8 +287,10 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
       queue = [
         %{user_id: "player1", rank: 1500, added_to_queue: minutes_ago(40)},
         %{user_id: "player2", rank: 1100, added_to_queue: minutes_ago(30)},
-        %{user_id: "player3", rank: 1195, added_to_queue: minutes_ago(20)},   # older at range 5
-        %{user_id: "player4", rank: 1205, added_to_queue: minutes_ago(10)},   # younger at range 5
+        # older at range 5
+        %{user_id: "player3", rank: 1195, added_to_queue: minutes_ago(20)},
+        # younger at range 5
+        %{user_id: "player4", rank: 1205, added_to_queue: minutes_ago(10)},
         %{user_id: "player_new", rank: 1200, added_to_queue: minutes_ago(0)}
       ]
 
@@ -305,9 +327,12 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
       # player2 (998, range 2, waited 10 min)
       # player1 (1001, range 1, waited 15 min) <- OLDEST at range 1, should win
       queue = [
-        %{user_id: "player1", rank: 1001, added_to_queue: minutes_ago(15)},   # oldest, range 1
-        %{user_id: "player2", rank: 998, added_to_queue: minutes_ago(10)},    # range 2
-        %{user_id: "player3", rank: 999, added_to_queue: minutes_ago(5)},     # younger, range 1
+        # oldest, range 1
+        %{user_id: "player1", rank: 1001, added_to_queue: minutes_ago(15)},
+        # range 2
+        %{user_id: "player2", rank: 998, added_to_queue: minutes_ago(10)},
+        # younger, range 1
+        %{user_id: "player3", rank: 999, added_to_queue: minutes_ago(5)},
         %{user_id: "new", rank: 1000, added_to_queue: minutes_ago(0)}
       ]
 
@@ -315,6 +340,7 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
       assert length(matched_players) == 2
 
       user_ids = Enum.map(matched_players, & &1.user_id) |> Enum.sort()
+
       # player1 is oldest at range 1, should match (not player3, even though player3 is range 1 too)
       assert user_ids == ["new", "player1"]
     end
@@ -325,10 +351,14 @@ defmodule QueueOfMatchmaking.MatchMakingTest do
       # All of p1, p4, p2 are at range 1
       # p1 waited longest (t=15), should match
       queue = [
-        %{user_id: "p1", rank: 1001, added_to_queue: minutes_ago(15)},   # oldest at range 1
-        %{user_id: "p4", rank: 1001, added_to_queue: minutes_ago(5)},    # youngest at range 1
-        %{user_id: "p3", rank: 1002, added_to_queue: minutes_ago(8)},    # range 2
-        %{user_id: "p2", rank: 999, added_to_queue: minutes_ago(10)},    # middle at range 1
+        # oldest at range 1
+        %{user_id: "p1", rank: 1001, added_to_queue: minutes_ago(15)},
+        # youngest at range 1
+        %{user_id: "p4", rank: 1001, added_to_queue: minutes_ago(5)},
+        # range 2
+        %{user_id: "p3", rank: 1002, added_to_queue: minutes_ago(8)},
+        # middle at range 1
+        %{user_id: "p2", rank: 999, added_to_queue: minutes_ago(10)},
         %{user_id: "new", rank: 1000, added_to_queue: minutes_ago(0)}
       ]
 

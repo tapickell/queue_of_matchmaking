@@ -57,7 +57,6 @@ defmodule QueueOfMatchmaking.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
-
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
@@ -85,7 +84,7 @@ defmodule QueueOfMatchmaking.MixProject do
         "deps.unlock --check-unused",
         "format --check-formatted",
         "sobelow --config",
-        "dialyzer --format github",
+        "dialyzer --format github"
       ],
       cov: ["cmd MIX_ENV=test mix coveralls.lcov"]
     ]

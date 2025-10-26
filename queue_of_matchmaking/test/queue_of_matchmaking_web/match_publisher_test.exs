@@ -43,7 +43,10 @@ defmodule QueueOfMatchmakingWeb.MatchPublisherTest do
              ]
            }
 
-    assert Keyword.fetch!(options, :match_found) |> Enum.sort() == ["match_found:alice", "match_found:bob"]
+    assert Keyword.fetch!(options, :match_found) |> Enum.sort() == [
+             "match_found:alice",
+             "match_found:bob"
+           ]
   end
 
   test "returns :ok even if the subscription module raises" do

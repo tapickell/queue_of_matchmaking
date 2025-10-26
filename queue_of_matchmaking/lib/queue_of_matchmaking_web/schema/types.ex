@@ -16,10 +16,16 @@ defmodule QueueOfMatchmakingWeb.Schema.Types do
 
   object :user do
     field(:user_id, non_null(:string))
-    field(:user_rank, non_null(:integer))
+
+    field :user_rank, non_null(:integer) do
+      resolve(fn user, _, _ ->
+        {:ok, Map.fetch!(user, :rank)}
+      end)
+    end
   end
 
   object :match_payload do
     field(:users, non_null(list_of(non_null(:user))))
+    field(:delta, non_null(:integer))
   end
 end

@@ -6,27 +6,13 @@ defmodule QueueOfMatchmaking.QueueManager do
 
   use GenServer
 
-  alias QueueOfMatchmaking.MatchPolicy
-  alias QueueOfMatchmaking.QueueBehaviour
+  alias QueueOfMatchmaking.QueueManagement
 
   @type enqueue_error ::
           :invalid_user_id
           | :invalid_rank
           | :already_enqueued
           | {:policy_rejected, term()}
-
-  defmodule State do
-    @moduledoc false
-
-    defstruct queue_module: nil,
-              queue_state: nil,
-              policy_module: nil,
-              policy_state: nil,
-              policy_timer_ref: nil,
-              time_fn: &System.monotonic_time/1,
-              matches: [],
-              max_match_history: 100
-  end
 
   ## Public API
 
@@ -53,30 +39,7 @@ defmodule QueueOfMatchmaking.QueueManager do
 
   @impl true
   def init(opts) do
-    queue_module = Keyword.get(opts, :queue_module, QueueOfMatchmaking.QueueStorage.Simple)
-    queue_opts = Keyword.get(opts, :queue_opts, [])
-
-    policy_module =
-      Keyword.get(opts, :policy_module, QueueOfMatchmaking.MatchPolicies.DeferredCapped)
-
-    policy_opts = Keyword.get(opts, :policy_opts, [])
-    time_fn = Keyword.get(opts, :time_fn, &System.monotonic_time/1)
-    max_history = Keyword.get(opts, :max_match_history, 100)
-
-    {:ok, queue_state} = queue_module.init(queue_opts)
-    {:ok, policy_state, timeout} = policy_module.init(policy_opts)
-
-    state = %State{
-      queue_module: queue_module,
-      queue_state: queue_state,
-      policy_module: policy_module,
-      policy_state: policy_state,
-      time_fn: time_fn,
-      matches: [],
-      max_match_history: max_history
-    }
-
-    {:ok, schedule_policy_timeout(state, timeout)}
+    QueueMamangement.init(opts, &schedule_policy_timeout/2)
   end
 
   @impl true

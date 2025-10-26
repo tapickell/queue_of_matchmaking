@@ -5,6 +5,7 @@ defmodule QueueOfMatchmaking.QueueMatches do
 
   alias QueueOfMatchmaking.{
     QueuePolicy,
+    QueueRequests,
     QueueState
   }
 
@@ -16,7 +17,7 @@ defmodule QueueOfMatchmaking.QueueMatches do
   end
 
   # TODO abstract this call to a publisher module
-  def publish({:ok, %{match: match}}, state) do
+  def publish({:ok, %{match: match}}) do
     endpoint_module = QueueOfMatchmakingWeb.Endpoint
 
     Absinthe.Subscription.publish(
@@ -38,22 +39,22 @@ defmodule QueueOfMatchmaking.QueueMatches do
     _ -> :ok
   end
 
-  def publish(_other, _state), do: :ok
+  def publish(_other), do: :ok
 
   def attempt(entry, context, state) do
     case QueuePolicy.max_delta(entry, context, state) do
       {:unbounded, policy_state} ->
         state = %{state | policy_state: policy_state}
-        do_attempt_match(entry, :unbounded, context, state, manager_ctx)
+        do_attempt_match(entry, :unbounded, context, state)
 
       {:bounded, limit, policy_state} ->
         state = %{state | policy_state: policy_state}
-        do_attempt_match(entry, {:bounded, limit}, context, state, manager_ctx)
+        do_attempt_match(entry, {:bounded, limit}, context, state)
     end
   end
 
   defp decide_match(entry, %QueueState{} = state) do
-    case QueuePolicy.matchmaking_mode(state, entry.inserted_at) do
+    case QueuePolicy.matchmaking_mode(entry, state, entry.inserted_at) do
       {:attempt, context, policy_state} ->
         {:ok, {:attempt, context}, %{state | policy_state: policy_state}}
 
@@ -66,8 +67,8 @@ defmodule QueueOfMatchmaking.QueueMatches do
   end
 
   defp process_match_decision(entry, {:attempt, context}, state) do
-    {reply, state} = attempt_match(entry, context, state)
-    publish_match(reply, state)
+    {reply, state} = attempt(entry, context, state)
+    publish(reply)
     {:reply, reply, state}
   end
 
@@ -76,11 +77,11 @@ defmodule QueueOfMatchmaking.QueueMatches do
   end
 
   defp process_match_decision(entry, :cancel, state) do
-    {:ok, _entry, state} = remove_entry(entry.handle, state)
+    {:ok, _entry, state} = QueueRequests.remove_entry(entry.handle, state)
     {:reply, {:error, {:policy_rejected, :cancelled}}, state}
   end
 
-  defp do_attempt_match(entry, delta_mode, context, state, manager_ctx) do
+  defp do_attempt_match(entry, delta_mode, context, state) do
     {snapshot, state} = snapshot(state)
     rank = entry.rank
 
@@ -108,7 +109,7 @@ defmodule QueueOfMatchmaking.QueueMatches do
         {{:ok, :queued}, state}
 
       candidate_entry ->
-        finalize_match(entry, candidate_entry, context, state, manager_ctx)
+        finalize_match(entry, candidate_entry, context, state)
     end
   end
 
@@ -144,9 +145,9 @@ defmodule QueueOfMatchmaking.QueueMatches do
     )
   end
 
-  defp finalize_match(entry, candidate_entry, context, state, manager_ctx) do
-    {:ok, candidate_entry, state} = remove_entry(candidate_entry.handle, state)
-    {:ok, entry, state} = remove_entry(entry.handle, state)
+  defp finalize_match(entry, candidate_entry, context, state) do
+    {:ok, candidate_entry, state} = QueueRequests.remove_entry(candidate_entry.handle, state)
+    {:ok, entry, state} = QueueRequests.remove_entry(entry.handle, state)
 
     now = state.time_fn.(:millisecond)
 
@@ -157,7 +158,7 @@ defmodule QueueOfMatchmaking.QueueMatches do
       context: context
     }
 
-    {:ok, policy_state} = QueuePolicy.after_match(state)
+    {:ok, policy_state} = QueuePolicy.after_match(match, state)
 
     state =
       state

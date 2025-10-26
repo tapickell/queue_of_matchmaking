@@ -39,12 +39,12 @@ defmodule QueueOfMatchmaking.QueueManager do
 
   @impl true
   def init(opts) do
-    QueueMamangement.init(opts, &schedule_policy_timeout/2)
+    QueueManagement.init(opts, &schedule_policy_timeout/2)
   end
 
   @impl true
   def handle_call({:enqueue, params}, _from, state) do
-    case QueueMangement.enqueue(params, state) do
+    case QueueManagement.enqueue(params, state) do
       {:ok, reply, state} ->
         {:reply, reply, state}
 
@@ -73,7 +73,7 @@ defmodule QueueOfMatchmaking.QueueManager do
   end
 
   def handle_info({:policy_retry, handle, context}, state) do
-    case QueueMangement.policy_retry(handle, context, state) do
+    case QueueManagement.policy_retry(handle, context, state) do
       {:ok, state} -> {:noreply, state}
 
       {:error, :not_found, state} ->

@@ -1,4 +1,12 @@
 defmodule QueueOfMatchmakingWeb.Schema.Types do
+  @moduledoc """
+  Defines GraphQL types for the matchmaking queue API.
+
+  Types include:
+  - `RequestResponse`: Success/error response for mutations
+  - `User`: User information with ID and rank
+  - `MatchPayload`: Contains matched users for subscription notifications
+  """
   use Absinthe.Schema.Notation
 
   object :request_response do

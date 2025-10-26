@@ -1,10 +1,11 @@
-defmodule QueueOfMatchmaking.QueueMangement do
+defmodule QueueOfMatchmaking.QueueManagement do
   @moduledoc """
   Management functions for queue manager
   """
 
   alias QueueOfMatchmaking.{
     QueueMatches,
+    QueuePolicy,
     QueueRequests,
     QueueState
   }
@@ -38,9 +39,8 @@ defmodule QueueOfMatchmaking.QueueMangement do
 
   def enqueue(params, state) do
     with {:ok, request} <- QueueRequests.normalize(params),
-         {:ok, entry_with_handle, state} <- QueueRequests.enqueue(request, state),
-         {:ok, reply, state} <- QueueMatches.find(entry_with_handle, state) do
-      {:ok, reply, state}
+         {:ok, entry_with_handle, state} <- QueueRequests.enqueue(request, state) do
+         QueueMatches.find(entry_with_handle, state)
     end
   end
 
@@ -48,7 +48,7 @@ defmodule QueueOfMatchmaking.QueueMangement do
     case QueueRequests.fetch(handle, state) do
       {:ok, entry, state} ->
         {reply, state} = QueueMatches.attempt(entry, context, state)
-        QueueMatches.publish(reply, state)
+        QueueMatches.publish(reply)
         {:ok, state}
 
       other ->
@@ -56,7 +56,7 @@ defmodule QueueOfMatchmaking.QueueMangement do
     end
   end
 
-  def policy_tick(state, schedule_timeout, return_handles) do
+  def policy_tick(state, schedule_policy_timeout, retry_handles) do
     case QueuePolicy.handle_timeout(state) do
       {:ok, policy_state, timeout} ->
         state

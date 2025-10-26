@@ -12,7 +12,7 @@ defmodule QueueOfMatchmaking.QueueRequests do
     with {:ok, entry} <- build_entry(request, state),
          {:ok, state} <- QueuePolicy.before_enqueue(entry, state),
          {:ok, handle, state} <- insert_entry(entry, state) do
-      fetch_entry(handle, state)
+      fetch(handle, state)
     end
   end
 
@@ -34,7 +34,7 @@ defmodule QueueOfMatchmaking.QueueRequests do
   end
 
   def normalize(%{"userId" => user_id, "rank" => rank}) do
-    normalize_request(%{user_id: user_id, rank: rank})
+    normalize(%{user_id: user_id, rank: rank})
   end
 
   def normalize(_), do: {:error, :invalid_params}
@@ -54,7 +54,7 @@ defmodule QueueOfMatchmaking.QueueRequests do
   defp normalize_rank(rank) when is_integer(rank) and rank >= 0, do: {:ok, rank}
   defp normalize_rank(_), do: {:error, :invalid_rank}
 
-  defp build_entry(%{user_id: user_id, rank: rank}, %QueueState{time_fn: time_fn} = state) do
+  defp build_entry(%{user_id: user_id, rank: rank}, %QueueState{time_fn: time_fn}) do
     now = time_fn.(:millisecond)
 
     {:ok,
@@ -67,7 +67,7 @@ defmodule QueueOfMatchmaking.QueueRequests do
      }}
   end
 
-  defp remove_entry(
+  def remove_entry(
          handle,
          %QueueState{queue_module: queue_module, queue_state: queue_state} = state
        ) do
@@ -80,7 +80,7 @@ defmodule QueueOfMatchmaking.QueueRequests do
     end
   end
 
-  defp insert_entry(
+  def insert_entry(
          entry,
          %QueueState{queue_module: queue_module, queue_state: queue_state} = state
        ) do

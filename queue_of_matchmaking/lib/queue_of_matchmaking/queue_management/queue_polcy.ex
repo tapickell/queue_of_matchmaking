@@ -24,18 +24,18 @@ defmodule QueueOfMatchmaking.QueuePolicy do
     state.policy_module.handle_timeout(manager_ctx, state.policy_state)
   end
 
-  def max_delta(%{policy_state: policy_state} = state) do
+  def max_delta(entry, context, %{policy_state: policy_state} = state) do
     {manager_ctx, state} = build_context(state)
     state.policy_module.max_delta(entry, manager_ctx, context, policy_state)
   end
 
-  def matchmaking_mode(%{policy_state: policy_state} = state, override) do
+  def matchmaking_mode(entry, %{policy_state: policy_state} = state, override) do
     {manager_ctx, state} = build_context(state, size_adjustment: 0, override_now: override)
 
     state.policy_module.matchmaking_mode(entry, manager_ctx, policy_state)
   end
 
-  def after_match(state) do
+  def after_match(match, state) do
     {match_ctx, state} = build_context(state)
     state.policy_module.after_match(match, match_ctx, state.policy_state)
   end

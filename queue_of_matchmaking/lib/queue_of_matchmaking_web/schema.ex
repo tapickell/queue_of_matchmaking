@@ -1,4 +1,11 @@
 defmodule QueueOfMatchmakingWeb.Schema do
+  @moduledoc """
+  GraphQL schema for the matchmaking queue application.
+
+  Provides:
+  - Mutation: `addRequest` - Add a user to the matchmaking queue
+  - Subscription: `matchFound` - Receive notifications when matched with another user
+  """
   use Absinthe.Schema
   import_types(QueueOfMatchmakingWeb.Schema.Types)
 

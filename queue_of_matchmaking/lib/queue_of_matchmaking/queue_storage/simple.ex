@@ -116,20 +116,28 @@ defmodule QueueOfMatchmaking.QueueStorage.Simple do
   @impl true
   def prune(predicate, state) when is_function(predicate, 1) do
     state.entries
-    |> Enum.reduce({[], state}, fn {handle, entry}, {pruned, acc_state} ->
-      if predicate.(entry) do
-        case remove(handle, acc_state) do
-          {:ok, removed_entry, new_state} ->
-            {[removed_entry | pruned], new_state}
+    |> Enum.reduce({[], state}, pruner(predicate))
+    |> then(fn {pruned, new_state} -> {:ok, Enum.reverse(pruned), new_state} end)
+  end
 
-          {:error, :not_found, new_state} ->
-            {pruned, new_state}
-        end
+  defp pruner(predicate) do
+    fn {handle, entry}, {pruned, acc_state} ->
+      if predicate.(entry) do
+        remover(handle, pruned, acc_state)
       else
         {pruned, acc_state}
       end
-    end)
-    |> then(fn {pruned, new_state} -> {:ok, Enum.reverse(pruned), new_state} end)
+    end
+  end
+
+  defp remover(handle, pruned, acc_state) do
+    case remove(handle, acc_state) do
+      {:ok, removed_entry, new_state} ->
+        {[removed_entry | pruned], new_state}
+
+      {:error, :not_found, new_state} ->
+        {pruned, new_state}
+    end
   end
 
   defp delete_handle_from_queue(queue, handle) do
@@ -145,9 +153,10 @@ defmodule QueueOfMatchmaking.QueueStorage.Simple do
       |> Map.get(rank, :queue.new())
       |> delete_handle_from_queue(handle)
 
-    cond do
-      :queue.is_empty(updated_queue) -> Map.delete(by_rank, rank)
-      true -> Map.put(by_rank, rank, updated_queue)
+    if :queue.is_empty(updated_queue) do
+      Map.delete(by_rank, rank)
+    else
+      Map.put(by_rank, rank, updated_queue)
     end
   end
 end

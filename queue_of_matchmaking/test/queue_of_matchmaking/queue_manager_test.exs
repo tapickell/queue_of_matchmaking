@@ -202,7 +202,8 @@ defmodule QueueOfMatchmaking.QueueManagerTest do
 
       flush_mailbox()
       send(server, :policy_tick)
-      assert_receive {:policy_state, :tick_updated}, 500
+      state_after = :sys.get_state(server)
+      assert state_after.policy_state == %{policy_state: :tick_updated}
     end
 
     test "policy_retry ignores not_found responses" do

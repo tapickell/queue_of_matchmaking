@@ -9,7 +9,7 @@ defmodule QueueOfMatchmakingWeb.Schema do
   use Absinthe.Schema
   import_types(QueueOfMatchmakingWeb.Schema.Types)
 
-  # alias QueueOfMatchmakingWeb.Resolvers
+  alias QueueOfMatchmakingWeb.Resolvers.Queue, as: QueueResolver
 
   query do
     field :_empty, :string do
@@ -22,10 +22,7 @@ defmodule QueueOfMatchmakingWeb.Schema do
       arg(:user_id, non_null(:string))
       arg(:rank, non_null(:integer))
 
-      # resolve &Resolvers.add_request/3
-      resolve(fn %{user_id: _, rank: _} ->
-        :ok
-      end)
+      resolve(&QueueResolver.add_request/3)
     end
   end
 
@@ -36,13 +33,6 @@ defmodule QueueOfMatchmakingWeb.Schema do
       config(fn args, _info ->
         {:ok, topic: "match_found:#{args.user_id}"}
       end)
-
-      trigger(:add_request,
-        topic: fn
-          %{user_id: user_id}, _ -> ["match_found:#{user_id}"]
-          _, _ -> []
-        end
-      )
     end
   end
 end

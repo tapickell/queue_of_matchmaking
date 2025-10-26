@@ -34,7 +34,7 @@ defmodule QueueOfMatchmakingWeb.MatchPublisher do
     }
   end
 
-  defp topic(user), do: "user:#{user.user_id}"
+  defp topic(user), do: "match_found:#{user.user_id}"
 
   defp subscription_module do
     Application.get_env(:queue_of_matchmaking, :subscription_module, @subscription_module)

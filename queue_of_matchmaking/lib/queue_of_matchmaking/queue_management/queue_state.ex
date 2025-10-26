@@ -7,6 +7,7 @@ defmodule QueueOfMatchmaking.QueueState do
             policy_state: nil,
             policy_timer_ref: nil,
             time_fn: &System.monotonic_time/1,
+            publisher_module: QueueOfMatchmaking.MatchPublisher.Noop,
             matches: [],
             max_match_history: 100
 

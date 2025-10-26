@@ -20,6 +20,7 @@ defmodule QueueOfMatchmaking.QueueManagement do
     policy_opts = Keyword.get(opts, :policy_opts, [])
     time_fn = Keyword.get(opts, :time_fn, &System.monotonic_time/1)
     max_history = Keyword.get(opts, :max_match_history, 100)
+    publisher_module = Keyword.get(opts, :publisher_module, QueueOfMatchmaking.MatchPublisher.Noop)
 
     {:ok, queue_state} = queue_module.init(queue_opts)
     {:ok, policy_state, timeout} = policy_module.init(policy_opts)
@@ -30,6 +31,7 @@ defmodule QueueOfMatchmaking.QueueManagement do
       policy_module: policy_module,
       policy_state: policy_state,
       time_fn: time_fn,
+      publisher_module: publisher_module,
       matches: [],
       max_match_history: max_history
     }
@@ -40,7 +42,14 @@ defmodule QueueOfMatchmaking.QueueManagement do
   def enqueue(params, state) do
     with {:ok, request} <- QueueRequests.normalize(params),
          {:ok, entry_with_handle, state} <- QueueRequests.enqueue(request, state) do
-      QueueMatches.find(entry_with_handle, state)
+      case QueueMatches.find(entry_with_handle, state) do
+        {:ok, reply, state} = result ->
+          publish_reply(reply, state)
+          result
+
+        other ->
+          other
+      end
     end
   end
 
@@ -48,7 +57,7 @@ defmodule QueueOfMatchmaking.QueueManagement do
     case QueueState.fetch(handle, state) do
       {:ok, entry, state} ->
         {reply, state} = QueueMatches.attempt(entry, context, state)
-        QueueMatches.publish(reply)
+        publish_reply(reply, state)
         {:ok, state}
 
       other ->
@@ -69,5 +78,19 @@ defmodule QueueOfMatchmaking.QueueManagement do
         |> schedule_policy_timeout.(timeout)
         |> retry_handles.(instructions)
     end
+  end
+
+  defp publish_reply({:ok, %{match: match}}, %QueueState{publisher_module: publisher_module}) do
+    safe_publish(publisher_module, match)
+  end
+
+  defp publish_reply(_reply, _state), do: :ok
+
+  defp safe_publish(nil, _match), do: :ok
+
+  defp safe_publish(publisher_module, match) do
+    publisher_module.publish(match)
+  rescue
+    _ -> :ok
   end
 end

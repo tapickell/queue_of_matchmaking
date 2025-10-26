@@ -12,7 +12,8 @@ defmodule QueueOfMatchmaking.Application do
       {DNSCluster,
        query: Application.get_env(:queue_of_matchmaking, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: QueueOfMatchmaking.PubSub},
-      {QueueOfMatchmaking.QueueManager, []},
+      {QueueOfMatchmaking.QueueManager,
+       [publisher_module: QueueOfMatchmakingWeb.MatchPublisher]},
       # Start a worker by calling: QueueOfMatchmaking.Worker.start_link(arg)
       # {QueueOfMatchmaking.Worker, arg},
       # Start to serve requests, typically the last entry

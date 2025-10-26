@@ -15,31 +15,6 @@ defmodule QueueOfMatchmaking.QueueMatches do
     end
   end
 
-  # TODO abstract this call to a publisher module
-  def publish({:ok, %{match: match}}) do
-    endpoint_module = QueueOfMatchmakingWeb.Endpoint
-
-    Absinthe.Subscription.publish(
-      endpoint_module,
-      %{
-        users:
-          Enum.map(match.users, fn user ->
-            %{
-              userId: user.user_id,
-              userRank: user.rank
-            }
-          end)
-      },
-      match_found: Enum.map(match.users, fn user -> "user:#{user.user_id}" end)
-    )
-
-    :ok
-  rescue
-    _ -> :ok
-  end
-
-  def publish(_other), do: :ok
-
   def attempt(entry, context, state) do
     case QueuePolicy.max_delta(entry, context, state) do
       {:unbounded, policy_state} ->
@@ -67,7 +42,6 @@ defmodule QueueOfMatchmaking.QueueMatches do
 
   defp process_match_decision(entry, {:attempt, context}, state) do
     {reply, state} = attempt(entry, context, state)
-    publish(reply)
     {:reply, reply, state}
   end
 

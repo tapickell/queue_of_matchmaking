@@ -1,0 +1,16 @@
+#+title: Todo
+* Status Overview
+** Repo is largely the generated Phoenix skeleton; no supervised queue process yet and startup tree only runs telemetry, DNSCluster, PubSub, and the endpoint (queue_of_matchmaking/lib/queue_of_matchmaking/application.ex:9).
+** Matching module is a stub: undefined Request type, only handles queue sizes <2 or ==2, and everything else returns {:error, :no_matches} despite exhaustive tests expecting incremental expansion (queue_of_matchmaking/lib/queue_of_matchmaking/match_making/find_match.ex:6; queue_of_matchmaking/test/ queue_of_matchmaking/match_making_test.exs:11).
+**  GraphQL layer isn’t wired up: mutation resolver returns bare :ok, subscription relies on trigger/2 without publishing from any queue, and field names are snake_case rather than the camelCase required by the spec (queue_of_matchmaking/lib/queue_of_matchmaking_web/schema.ex:13; queue_of_matchmaking/lib/ queue_of_matchmaking_web/schema/types.ex:9).
+** mix test currently can’t run because the declared toolchain elixir 1.18.4-otp-28 isn’t installed in asdf; the CLI suggests available alternatives, so no automated feedback is available yet (queue_of_matchmaking/.tool-versions, mix error message).
+
+* Spec Alignment
+  - SPEC.md, QueueOfMatchmaking_Updated_Spec.md, and the request-flow doc all target the same behavior: in-memory GenServer queue, incremental rank expansion, FIFO fairness, Absinthe mutation/subscription, enforced topic privacy, and stable error atoms. The updated spec tightens requirements (bucketed state, monotonic timestamps, exact error strings), so treat it as canonical.
+  - Current codebase hasn’t implemented most of those requirements: no queue manager, no incremental algorithm, no validation/error handling, no PubSub publishing, schema shape mismatch (e.g., userId vs user_id), and no tests beyond the unimplemented matcher unit specs.
+  - Docs appear internally consistent and sufficient to drive the build; only note the divergence between SPEC.md’s prose error messages and the updated spec’s token strings—pick one and keep it consistent during implementation.
+
+*  Next Steps
+** DONE Install the toolchain (asdf install) so mix test works, then get a red bar from the existing matcher specs before changing code.
+** TODO  Introduce the QueueManager GenServer per spec (state structure, enqueue API, validation, match orchestration) and replace the placeholder MatchMaking module with the documented incremental expansion logic, updating or pruning the current tests to align with the chosen state representation.
+** TODO Build out the Absinthe layer: rename fields to match the GraphQL contract, add resolvers that call the queue manager, publish matches to user-scoped topics, expose /graphql and /graphiql as described, and add integration tests that exercise mutation + subscription flow via the Phoenix endpoint.

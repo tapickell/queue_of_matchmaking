@@ -1,0 +1,35 @@
+* Queue Manager Implementation Plan
+
+** TODO Confirm data structures
+*** TODO Define `QueueOfMatchmaking.QueueManager.State` struct with `by_rank`, `index`, and `matches`
+*** TODO Choose monotonic timestamp source (`System.monotonic_time(:millisecond)`)
+
+** TODO Implement QueueManager GenServer
+*** TODO Create `QueueOfMatchmaking.QueueManager` module with `start_link/1` and `init/1`
+*** TODO Add public API (`enqueue/2`, `remove/1`, optional introspection helpers)
+*** TODO Wire GenServer into supervision tree (`QueueOfMatchmaking.Application`)
+
+** TODO Build validation layer
+*** TODO Implement input sanitation (`userId` trim, length <= 255)
+*** TODO Reject negative ranks and non-integers
+*** TODO Detect duplicates via `index` map and return `"already_enqueued"`
+
+** TODO Replace matchmaking stub
+*** TODO Move matching logic into dedicated module (e.g. `QueueOfMatchmaking.Matchmaking`)
+*** TODO Implement incremental rank expansion with FIFO fairness per spec
+*** TODO Ensure deterministic tie-breaking using `{inserted_at, user_id}`
+
+** TODO Integrate QueueManager with matching
+*** TODO On successful enqueue, attempt match against queue state
+*** TODO Remove matched entries from all state indexes
+*** TODO Record recent matches (bounded list) for observability
+
+** TODO Connect PubSub + GraphQL
+*** TODO Publish matches via `Absinthe.Subscription.publish/3` with user-scoped topics
+*** TODO Update GraphQL resolver to call `QueueManager.enqueue/2` and surface errors
+*** TODO Adjust schema field names (`userId`, `userRank`) to match spec
+
+** TODO Update and expand tests
+*** TODO Rewrite existing `MatchMaking.find_match/1` tests for new API/state
+*** TODO Add QueueManager unit tests for validation and duplicate handling
+*** TODO Create integration tests covering mutation + subscription flow

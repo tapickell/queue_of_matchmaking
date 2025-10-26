@@ -5,7 +5,6 @@ defmodule QueueOfMatchmaking.QueueMatches do
 
   alias QueueOfMatchmaking.{
     QueuePolicy,
-    QueueRequests,
     QueueState
   }
 
@@ -77,7 +76,7 @@ defmodule QueueOfMatchmaking.QueueMatches do
   end
 
   defp process_match_decision(entry, :cancel, state) do
-    {:ok, _entry, state} = QueueRequests.remove_entry(entry.handle, state)
+    {:ok, _entry, state} = QueueState.remove_entry(entry.handle, state)
     {:reply, {:error, {:policy_rejected, :cancelled}}, state}
   end
 
@@ -146,8 +145,8 @@ defmodule QueueOfMatchmaking.QueueMatches do
   end
 
   defp finalize_match(entry, candidate_entry, context, state) do
-    {:ok, candidate_entry, state} = QueueRequests.remove_entry(candidate_entry.handle, state)
-    {:ok, entry, state} = QueueRequests.remove_entry(entry.handle, state)
+    {:ok, candidate_entry, state} = QueueState.remove_entry(candidate_entry.handle, state)
+    {:ok, entry, state} = QueueState.remove_entry(entry.handle, state)
 
     now = state.time_fn.(:millisecond)
 

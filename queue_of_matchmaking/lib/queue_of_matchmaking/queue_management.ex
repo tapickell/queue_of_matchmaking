@@ -40,12 +40,12 @@ defmodule QueueOfMatchmaking.QueueManagement do
   def enqueue(params, state) do
     with {:ok, request} <- QueueRequests.normalize(params),
          {:ok, entry_with_handle, state} <- QueueRequests.enqueue(request, state) do
-         QueueMatches.find(entry_with_handle, state)
+      QueueMatches.find(entry_with_handle, state)
     end
   end
 
   def policy_retry(handle, context, state) do
-    case QueueRequests.fetch(handle, state) do
+    case QueueState.fetch(handle, state) do
       {:ok, entry, state} ->
         {reply, state} = QueueMatches.attempt(entry, context, state)
         QueueMatches.publish(reply)

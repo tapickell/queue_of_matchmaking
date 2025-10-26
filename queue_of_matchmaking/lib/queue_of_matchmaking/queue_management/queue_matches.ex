@@ -8,6 +8,22 @@ defmodule QueueOfMatchmaking.QueueMatches do
     QueueState
   }
 
+  @type entry :: map()
+  @type context :: map()
+  @type match :: %{
+          required(:users) => [map()],
+          optional(:delta) => non_neg_integer(),
+          optional(:matched_at) => integer(),
+          optional(:context) => term()
+        }
+  @type decision ::
+          {:attempt, context()}
+          | :defer
+          | :cancel
+  @type match_reply :: {:ok, :queued} | {:ok, %{match: match()}} | {:error, term()}
+
+  @spec find(entry(), QueueState.t()) ::
+          {:ok, match_reply(), QueueState.t()} | {:error, term(), QueueState.t()}
   def find(entry_with_handle, state) do
     with {:ok, decision, state} <- decide_match(entry_with_handle, state),
          {:reply, reply, state} <- process_match_decision(entry_with_handle, decision, state) do
@@ -15,6 +31,8 @@ defmodule QueueOfMatchmaking.QueueMatches do
     end
   end
 
+  @spec attempt(entry(), context(), QueueState.t()) ::
+          {match_reply(), QueueState.t()}
   def attempt(entry, context, state) do
     case QueuePolicy.max_delta(entry, context, state) do
       {:unbounded, policy_state} ->

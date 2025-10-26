@@ -15,6 +15,7 @@ defmodule QueueOfMatchmaking.MatchPublisher do
     @behaviour QueueOfMatchmaking.MatchPublisher
 
     @impl true
+    @spec publish(map()) :: :ok
     def publish(_match), do: :ok
   end
 end

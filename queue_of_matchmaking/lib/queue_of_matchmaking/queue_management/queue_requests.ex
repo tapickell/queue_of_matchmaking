@@ -8,14 +8,26 @@ defmodule QueueOfMatchmaking.QueueRequests do
     QueueState
   }
 
-  def enqueue(request, state) do
-    with {:ok, entry} <- build_entry(request, state),
+  @type raw_request :: map()
+  @type normalized_request :: %{
+          required(:user_id) => String.t(),
+          required(:rank) => non_neg_integer()
+        }
+
+  @spec enqueue(raw_request(), QueueState.t()) ::
+          {:ok, map(), QueueState.t()}
+          | {:error, term(), QueueState.t()}
+          | {:error, term()}
+  def enqueue(params, state) do
+    with {:ok, request} <- normalize(params),
+         {:ok, entry} <- build_entry(request, state),
          {:ok, state} <- QueuePolicy.before_enqueue(entry, state),
          {:ok, handle, state} <- QueueState.insert_entry(entry, state) do
       QueueState.fetch(handle, state)
     end
   end
 
+  @spec normalize(raw_request()) :: {:ok, normalized_request()} | {:error, term()}
   def normalize(%{user_id: user_id, rank: rank}) do
     with {:ok, user_id} <- normalize_user_id(user_id),
          {:ok, rank} <- normalize_rank(rank) do

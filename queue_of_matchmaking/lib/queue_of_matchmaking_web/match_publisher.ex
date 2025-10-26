@@ -7,9 +7,16 @@ defmodule QueueOfMatchmakingWeb.MatchPublisher do
 
   alias QueueOfMatchmakingWeb.Endpoint
 
+  @subscription_module Application.compile_env(
+                         :queue_of_matchmaking,
+                         :subscription_module,
+                         Absinthe.Subscription
+                       )
+
   @impl true
+  @spec publish(%{required(:users) => [map()]}) :: :ok
   def publish(%{users: users}) do
-    Absinthe.Subscription.publish(
+    subscription_module().publish(
       Endpoint,
       %{users: Enum.map(users, &format_user/1)},
       match_found: Enum.map(users, &topic/1)
@@ -28,4 +35,8 @@ defmodule QueueOfMatchmakingWeb.MatchPublisher do
   end
 
   defp topic(user), do: "user:#{user.user_id}"
+
+  defp subscription_module do
+    Application.get_env(:queue_of_matchmaking, :subscription_module, @subscription_module)
+  end
 end

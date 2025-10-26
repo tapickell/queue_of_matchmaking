@@ -74,7 +74,8 @@ defmodule QueueOfMatchmaking.QueueManager do
 
   def handle_info({:policy_retry, handle, context}, state) do
     case QueueManagement.policy_retry(handle, context, state) do
-      {:ok, state} -> {:noreply, state}
+      {:ok, state} ->
+        {:noreply, state}
 
       {:error, :not_found, state} ->
         {:noreply, state}

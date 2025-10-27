@@ -11,17 +11,17 @@
 3. [x] **Naming**:
    - The application should be named `:queue_of_matchmaking`.
    - The main Elixir module should be `QueueOfMatchmaking`.
-4. [ ] **API Interface**:
+4. [X] **API Interface**:
    - Provide a GraphQL interface using Absinthe.
    - Expose a GraphQL mutation to add a match request to the queue.
    - Expose a GraphQL subscription to notify clients when two users are matched.
-5. [ ] **Data Storage**:
+5. [X] **Data Storage**:
    - Do not use any persistent storage.
    - All data (requests, matched pairs) must be stored in memory.
-6. [ ] **Libraries**:
+6. [X] **Libraries**:
    - You may use any Elixir/Erlang library for handling concurrency or scheduling.
    - Use Absinthe for the GraphQL schema and endpoint.
-7. [ ] **Testing**:
+7. [X] **Testing**:
    - Include tests that verify the correct behavior of the queueing and matching logic.
    - Our automated tests will interact with the public GraphQL interface only.
 8. [ ] **Code Quality**:

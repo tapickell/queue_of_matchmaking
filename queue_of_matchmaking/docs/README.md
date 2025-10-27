@@ -1,18 +1,46 @@
-# QueueOfMatchmaking
+## Implementation Phases
 
-To start your Phoenix server:
+### Phase 1: Core Setup
+- [X] Initialize Mix project
+- [X] Add dependencies (Absinthe, Phoenix)
+- [X] Configure application
+- [X] Define project structure
 
-  * Run `mix setup` to install and setup dependencies
-  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+### Phase 2: Queue Manager
+- [X] Implement GenServer for queue
+- [X] Add/remove operations
+- [X] Basic state management
+- [X] Input validation
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+### Phase 3: Matching Logic
+- [X] Implement closest-rank algorithm
+- [X] Handle match creation
+- [X] Remove matched users from queue
+- [ ] Store matched pairs
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+### Phase 4: GraphQL Layer
+- [ ] Define Absinthe schema
+- [ ] Implement addRequest mutation
+- [ ] Implement matchFound subscription
+- [ ] Connect to Queue Manager
+- [ ] Configure PubSub
 
-## Learn more
+### Phase 5: Testing
+- [X] Unit tests for queue operations
+- [X] Unit tests for matching logic
+- [ ] Integration tests for GraphQL API
+- [ ] Concurrent request tests
+- [ ] Edge case coverage
 
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+### Phase 6: Polish
+- [ ] Code review and refactoring
+- [ ] Documentation (inline and README)
+- [ ] Performance benchmarking with Benchee
+  - [ ] Create benchmark suite for matching algorithm
+  - [ ] Compare data structure options (list vs map)
+  - [ ] Benchmark with various queue sizes
+  - [ ] Generate HTML reports
+- [ ] Error handling improvements
+
+
+NOTE - REarrange these to be more TDD

@@ -14,13 +14,14 @@ defmodule QueueOfMatchmakingWeb.MatchPublisher do
                        )
 
   @impl true
-  @spec publish(%{required(:users) => [map()]}) :: :ok
-  def publish(%{users: users}) do
-    subscription_module().publish(
-      Endpoint,
-      %{users: Enum.map(users, &format_user/1)},
-      match_found: Enum.map(users, &topic/1)
-    )
+  @spec publish(%{required(:users) => [map()], optional(:delta) => non_neg_integer()}) :: :ok
+  def publish(%{users: users} = match) do
+    payload = %{
+      users: Enum.map(users, &format_user/1),
+      delta: normalize_delta(match)
+    }
+
+    subscription_module().publish(Endpoint, payload, match_found: Enum.map(users, &topic/1))
 
     :ok
   rescue
@@ -38,6 +39,9 @@ defmodule QueueOfMatchmakingWeb.MatchPublisher do
   end
 
   defp topic(user), do: "match_found:#{user.user_id}"
+
+  defp normalize_delta(%{delta: delta}) when is_integer(delta), do: delta
+  defp normalize_delta(_), do: 0
 
   defp subscription_module do
     Application.get_env(:queue_of_matchmaking, :subscription_module, @subscription_module)

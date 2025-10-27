@@ -48,6 +48,7 @@ defmodule QueueOfMatchmaking.MixProject do
       {:absinthe, "~> 1.7"},
       {:absinthe_phoenix, "~> 2.0"},
       {:absinthe_plug, "~> 1.5"},
+      {:absinthe_graphql_ws, "~> 0.3"},
       {:phoenix, "~> 1.7.21"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:phoenix_pubsub, "~> 2.1"},

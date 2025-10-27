@@ -1,5 +1,6 @@
 defmodule QueueOfMatchmakingWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :queue_of_matchmaking
+  use Absinthe.Phoenix.Endpoint
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -10,6 +11,18 @@ defmodule QueueOfMatchmakingWeb.Endpoint do
     signing_salt: "STpVRABE",
     same_site: "Lax"
   ]
+
+  socket "/socket", QueueOfMatchmakingWeb.UserSocket,
+    websocket: true,
+    longpoll: false
+
+  socket "/graphql", QueueOfMatchmakingWeb.GraphqlSocket,
+    websocket: [
+      compress: false,
+      subprotocols: ["graphql-transport-ws"],
+      serializer: Absinthe.GraphqlWS.Serializer
+    ],
+    longpoll: false
 
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [connect_info: [session: @session_options]],

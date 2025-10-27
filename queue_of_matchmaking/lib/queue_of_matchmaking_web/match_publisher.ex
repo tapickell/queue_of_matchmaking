@@ -29,6 +29,9 @@ defmodule QueueOfMatchmakingWeb.MatchPublisher do
 
   defp format_user(user) do
     %{
+      user_id: user.user_id,
+      user_rank: user.rank,
+      rank: user.rank,
       userId: user.user_id,
       userRank: user.rank
     }

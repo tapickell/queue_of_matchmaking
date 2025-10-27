@@ -6,25 +6,36 @@ defmodule QueueOfMatchmakingWeb.GraphqlSocket do
 
   alias Absinthe.GraphqlWS.{Transport, Util}
 
+  defoverridable handle_in: 2, handle_info: 2
+
   @impl true
   def handle_in({text, [opcode: :text]} = frame, socket) when is_binary(text) do
     json = Util.json_library()
 
-    with {:ok, message} <- json.decode(text),
-         {:ok, translated, socket} <- translate_incoming(message, socket),
-         {:ok, encoded} <- encode(json, translated) do
-      Transport.handle_in({encoded, [opcode: :text]}, socket)
-    else
-      {:close, code, reason, socket} ->
-        {:reply, :ok, {:close, code, reason}, socket}
+    if is_binary(text) do
+      case json.decode(text) do
+        {:ok, message} ->
+          case translate_incoming(message, socket) do
+            {:ok, translated, socket} ->
+              case encode(json, translated) do
+                {:ok, encoded} ->
+                  Transport.handle_in({encoded, [opcode: :text]}, socket)
 
-      _ ->
-        Transport.handle_in(frame, socket)
+                :error ->
+                  Transport.handle_in(frame, socket)
+              end
+
+            {:stop, reason, socket} ->
+              {:stop, reason, socket}
+          end
+
+        _ ->
+          Transport.handle_in(frame, socket)
+      end
+    else
+      Transport.handle_in(frame, socket)
     end
   end
-
-  @impl true
-  def handle_in(frame, socket), do: Transport.handle_in(frame, socket)
 
   @impl true
   def handle_info(message, socket) do
@@ -46,9 +57,8 @@ defmodule QueueOfMatchmakingWeb.GraphqlSocket do
     {:ok, Map.put(message, "type", "complete"), socket}
   end
 
-  defp translate_incoming(%{"type" => "connection_terminate"}, socket) do
-    {:close, 1000, "", socket}
-  end
+  defp translate_incoming(%{"type" => "connection_terminate"}, socket),
+    do: {:stop, :normal, socket}
 
   defp translate_incoming(%{"type" => "subscribe"} = message, socket) do
     socket = maybe_set_protocol(socket, :graphql_transport_ws)
@@ -78,11 +88,11 @@ defmodule QueueOfMatchmakingWeb.GraphqlSocket do
     %{socket | assigns: Map.put(socket.assigns, :protocol, protocol)}
   end
 
-  defp encode(json, message) do
-    try do
-      {:ok, json.encode!(message)}
-    rescue
-      _ -> :error
-    end
+  defp encode(json, message), do: json_encode(json, message)
+
+  defp json_encode(json, message) do
+    {:ok, json.encode!(message)}
+  rescue
+    _ -> :error
   end
 end

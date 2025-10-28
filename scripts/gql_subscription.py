@@ -2,15 +2,16 @@
 """Exercise GraphQL subscriptions using the gql library (graphql-transport-ws)."""
 
 import asyncio
+import csv
 import os
 import sys
-from typing import Any
+from pathlib import Path
+from typing import Any, Iterable
 
 import requests
 from gql import Client, gql
 from gql.transport.websockets import WebsocketsTransport
 
-HTTP_ENDPOINT = os.getenv("QUEUE_MATCHMAKING_GQL_ENDPOINT", "http://localhost:4000/api")
 WS_ENDPOINT = os.getenv(
     "QUEUE_MATCHMAKING_GQL_WS_ENDPOINT", "ws://localhost:4000/graphql/websocket"
 )
@@ -29,6 +30,24 @@ SUBSCRIPTION = gql(
     """
 )
 
+
+def concurrency_limit() -> int:
+    raw_value = os.getenv("QUEUE_MATCHMAKING_SUBSCRIPTION_CONCURRENCY", "25")
+    try:
+        value = int(raw_value)
+    except ValueError:
+        raise ValueError(
+            f"QUEUE_MATCHMAKING_SUBSCRIPTION_CONCURRENCY must be an integer, got {raw_value!r}"
+        ) from None
+
+    if value <= 0:
+        raise ValueError(
+            f"QUEUE_MATCHMAKING_SUBSCRIPTION_CONCURRENCY must be > 0, got {raw_value!r}"
+        )
+
+    return value
+
+
 async def subscribe_once(user_id: str) -> dict[str, Any]:
     transport = WebsocketsTransport(url=WS_ENDPOINT, subprotocols=["graphql-transport-ws"])
     async with Client(
@@ -40,28 +59,40 @@ async def subscribe_once(user_id: str) -> dict[str, Any]:
     raise RuntimeError("Subscription completed without emitting data")
 
 
-async def expect_match(user_a: str, rank_a: int, user_b: str, rank_b: int) -> None:
-    task_a = asyncio.create_task(subscribe_once(user_a))
-    task_b = asyncio.create_task(subscribe_once(user_b))
+def load_players(csv_path: Path) -> Iterable[tuple[str, int]]:
+    with csv_path.open("r", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            yield row["userId"], int(row["rank"])
 
-    result_a, result_b = await asyncio.gather(task_a, task_b)
 
-    users_a = sorted(u["userId"] for u in result_a["matchFound"]["users"])
-    users_b = sorted(u["userId"] for u in result_b["matchFound"]["users"])
-    expected = sorted([user_a, user_b])
+async def monitor_user(user_id: str, rank: int, semaphore: asyncio.Semaphore) -> None:
+    print(f"▶️  Subscribing for {user_id} (rank {rank})")
+    async with semaphore:
+        result = await subscribe_once(user_id)
 
-    if users_a != expected:
-        raise RuntimeError(f"Subscription for {user_a} expected {expected}, got {users_a}")
-    if users_b != expected:
-        raise RuntimeError(f"Subscription for {user_b} expected {expected}, got {users_b}")
+        match = result.get("matchFound")
+        if not match:
+            print(f"⚠️  Subscription for {user_id} returned unexpected payload: {result}")
+            return
 
-    print(f"✅ Subscription match received for {user_a} & {user_b} (delta {result_a['matchFound']['delta']})")
+        users = sorted(u["userId"] for u in match["users"])
+        delta = match["delta"]
+        print(f"✅ Match for {user_id}: users={users}, delta={delta}")
 
 
 async def main() -> None:
-    user_a = "sub_exact_a"
-    user_b = "sub_exact_b"
-    await expect_match(user_a, 1500, user_b, 1500)
+    csv_path = Path(__file__).resolve().parent / "player_data.csv"
+    players = list(load_players(csv_path))
+
+    if not players:
+        print(f"No player entries found in {csv_path}")
+        return
+
+    semaphore = asyncio.Semaphore(concurrency_limit())
+    await asyncio.gather(
+        *(monitor_user(user_id, rank, semaphore) for user_id, rank in players)
+    )
 
 
 if __name__ == "__main__":

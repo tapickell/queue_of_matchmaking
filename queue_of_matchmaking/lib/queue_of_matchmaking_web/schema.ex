@@ -12,13 +12,9 @@ defmodule QueueOfMatchmakingWeb.Schema do
   alias QueueOfMatchmakingWeb.Resolvers.Queue, as: QueueResolver
 
   query do
-    field :_empty, :string do
+    @desc "Minimal placeholder to satisfy the GraphQL spec requirement for a Query root."
+    field :status, :string do
       resolve(fn _, _ -> {:ok, "ok"} end)
-    end
-
-    field :recent_matches, non_null(list_of(non_null(:match_payload))) do
-      arg(:limit, :integer)
-      resolve(&QueueResolver.recent_matches/3)
     end
   end
 

@@ -25,34 +25,8 @@ defmodule QueueOfMatchmakingWeb.Resolvers.Queue do
       {:ok, %{ok: false, error: Exception.message(error)}}
   end
 
-  def recent_matches(_parent, args, _resolution) do
-    queue_manager = queue_manager()
-    limit = Map.get(args, :limit, 10)
-
-    matches =
-      queue_manager.recent_matches(limit)
-      |> Enum.map(&sanitize_match/1)
-
-    {:ok, matches}
-  end
-
   defp queue_manager do
     Application.get_env(:queue_of_matchmaking, :queue_manager, @queue_manager)
-  end
-
-  defp sanitize_match(%{users: users} = match) do
-    sanitized_users =
-      Enum.map(users, fn user ->
-        %{
-          user_id: user.user_id,
-          rank: user.rank
-        }
-      end)
-
-    match
-    |> Map.put(:users, sanitized_users)
-    |> Map.delete(:matched_at)
-    |> Map.delete(:context)
   end
 
   defp format_error({:policy_rejected, reason}), do: "policy rejected: #{inspect(reason)}"

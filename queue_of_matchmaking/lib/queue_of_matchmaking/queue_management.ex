@@ -31,7 +31,6 @@ defmodule QueueOfMatchmaking.QueueManagement do
 
     policy_opts = Keyword.get(opts, :policy_opts, [])
     time_fn = Keyword.get(opts, :time_fn, &System.monotonic_time/1)
-    max_history = Keyword.get(opts, :max_match_history, 100)
 
     publisher_module =
       Keyword.get(opts, :publisher_module, QueueOfMatchmaking.MatchPublisher.Noop)
@@ -46,8 +45,7 @@ defmodule QueueOfMatchmaking.QueueManagement do
       policy_state: policy_state,
       time_fn: time_fn,
       publisher_module: publisher_module,
-      matches: [],
-      max_match_history: max_history
+      matches: []
     }
 
     {:ok, schedule_policy_timeout.(state, timeout)}

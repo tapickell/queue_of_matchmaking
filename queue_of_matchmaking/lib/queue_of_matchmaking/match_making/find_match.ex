@@ -41,8 +41,7 @@ defmodule QueueOfMatchmaking.MatchMaking do
         queue_state: queue_state,
         policy_module: __MODULE__.NaivePolicy,
         policy_state: %{},
-        matches: [],
-        max_match_history: max(length(queue), 5)
+        matches: []
       }
       |> attach_time_fn()
 

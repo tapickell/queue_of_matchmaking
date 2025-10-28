@@ -14,8 +14,7 @@ defmodule QueueOfMatchmaking.QueueState do
             policy_timer_ref: nil,
             time_fn: &System.monotonic_time/1,
             publisher_module: QueueOfMatchmaking.MatchPublisher.Noop,
-            matches: [],
-            max_match_history: 100
+            matches: []
 
   @type t :: %__MODULE__{
           queue_module: queue_module(),
@@ -25,8 +24,7 @@ defmodule QueueOfMatchmaking.QueueState do
           policy_timer_ref: reference() | nil,
           time_fn: (atom() -> integer()),
           publisher_module: module(),
-          matches: [match_record()],
-          max_match_history: non_neg_integer()
+          matches: [match_record()]
         }
 
   @type entry :: map()

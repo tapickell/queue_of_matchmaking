@@ -27,8 +27,8 @@ defmodule QueueOfMatchmaking.MatchPolicies.DeferredCapped do
     opts =
       opts
       |> Keyword.validate!(
-        min_queue: 2,
-        max_wait_ms: :infinity,
+        min_queue: 20,
+        max_wait_ms: 60_000,
         tick_ms: 1_000,
         initial_delta: :unbounded,
         relaxed_delta: :unbounded

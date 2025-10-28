@@ -166,10 +166,8 @@ defmodule QueueOfMatchmaking.QueueMatches do
     end)
   end
 
-  defp store_match(%QueueState{matches: matches, max_match_history: max} = state, match) do
-    updated =
-      [match | matches]
-      |> Enum.take(max)
+  defp store_match(%QueueState{matches: matches} = state, match) do
+    updated = [match | matches]
 
     %{state | matches: updated}
   end

@@ -32,7 +32,7 @@ SUBSCRIPTION = gql(
 
 
 def concurrency_limit() -> int:
-    raw_value = os.getenv("QUEUE_MATCHMAKING_SUBSCRIPTION_CONCURRENCY", "25")
+    raw_value = os.getenv("QUEUE_MATCHMAKING_SUBSCRIPTION_CONCURRENCY", "50")
     try:
         value = int(raw_value)
     except ValueError:
